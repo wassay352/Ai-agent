@@ -1,0 +1,1 @@
+curl -X POST "http://localhost:8000/v1/chat/completions" -H "Content-Type: application/json" -H "Authorization: Bearer my-secret-wassay-key-123" -d '{"model": "gemini-2.0-flash", "messages": [{"role": "user", "content": "Hello! Test my custom API."}]}'
