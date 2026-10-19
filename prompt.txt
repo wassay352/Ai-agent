@@ -1,0 +1,41 @@
+Act as a Principal AI Engineer. I need you to create and assemble the complete file architecture to run both a custom PyTorch Transformer model and a local Ollama LLM setup within my agent framework (`cloak-agent`).
+
+Please generate the code and place them into the following exact file structure:
+
+cloak-agent/
+├── custom-model/
+│   ├── model.py
+│   ├── provider.py
+│   ├── sample_data.txt
+│   ├── custom_model.pth (assume exists)
+│   └── custom_model_tokenizer.json (assume exists)
+├── providers/
+│   ├── base.py
+│   ├── custom.py
+│   └── ollama.py
+├── test_run.py
+└── requirements.txt
+
+### Specifications:
+
+1. **`custom-model/model.py`**:
+   - Implement a decoder-only character-level Transformer in PyTorch (`CustomLanguageModel`).
+   - Include multi-head self-attention (`Head`, `MultiHeadAttention`), `FeedForward`, and transformer `Block` layers.
+   - Include a `.generate(idx, max_new_tokens)` method for autoregressive token sampling.
+
+2. **`custom-model/provider.py`**:
+   - Create a `CustomModelProvider` class that loads `custom_model.pth` and `sample_data.txt`.
+   - Build character-to-index (`stoi`) and index-to-character (`itos`) mapping dictionaries.
+   - Implement a `complete(prompt: str, max_tokens: int = 150) -> str` method that handles token encoding, inference, and decoding cleanly.
+
+3. **`providers/ollama.py`**:
+   - Implement an `OllamaProvider` class connecting to `http://localhost:11434/api/generate` via `requests` or `httpx`.
+   - Default model target: `qwen2.5-coder:1.5b`.
+
+4. **`test_run.py`**:
+   - Provide a quick test script to verify inference across both the custom PyTorch model and the local Ollama service.
+
+5. **`requirements.txt`**:
+   - Include necessary dependencies: `torch`, `requests`, `pydantic`, `fastapi`, `uvicorn`.
+
+Please write clear, self-contained Python scripts for each file.
