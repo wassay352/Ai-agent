@@ -1,0 +1,11 @@
+# Don't let Vercel scan these as potential entrypoints
+api_server.py
+agent/
+custom-model/
+providers/
+test_run.py
+ui/
+*.pth
+__pycache__/
+node_modules/
+.next/

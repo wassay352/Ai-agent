@@ -4,3 +4,14 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+node_modules/
+.next/
+out/
+*.pth
+*.ckpt
+.DS_Store
+.vscode/
+dist/
+build/
+*.log
+console.txt

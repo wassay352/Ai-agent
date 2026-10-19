@@ -30,9 +30,10 @@ class Head(nn.Module):
 
     def __init__(self, config: ModelConfig):
         super().__init__()
-        self.key = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
-        self.query = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
-        self.value = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
+        head_dim = config.n_embd // config.n_head
+        self.key = nn.Linear(config.n_embd, head_dim, bias=config.bias)
+        self.query = nn.Linear(config.n_embd, head_dim, bias=config.bias)
+        self.value = nn.Linear(config.n_embd, head_dim, bias=config.bias)
         self.attn_dropout = nn.Dropout(config.dropout)
         self.resid_dropout = nn.Dropout(config.dropout)
         self.register_buffer(
@@ -44,7 +45,7 @@ class Head(nn.Module):
         B, T, C = x.size()
         k = self.key(x)
         q = self.query(x)
-        wei = (q @ k.transpose(-2, -1)) * (C ** -0.5)
+        wei = (q @ k.transpose(-2, -1)) * (k.size(-1) ** -0.5)
         wei = wei.masked_fill(self.tril[:T, :T] == 0, float("-inf"))
         wei = F.softmax(wei, dim=-1)
         wei = self.attn_dropout(wei)

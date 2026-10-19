@@ -34,7 +34,7 @@ REGISTRY: dict[str, dict[str, str]] = {
     "ollama": {
         "base_url": "http://localhost:11434/v1",
         "key_env": "OLLAMA_API_KEY",
-        "default_model": "qwen2.5-coder:7b",
+        "default_model": "qwen2.5-coder:1.5b",
         "requires_key": "false",
     },
     "groq": {
