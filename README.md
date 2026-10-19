@@ -18,7 +18,7 @@ cp .env.example .env
 
 # 2. Start Ollama and pull a model (skip if using a cloud provider)
 ollama serve &
-ollama pull qwen2.5-coder:7b
+ollama pull qwen2.5-coder:1.5b
 
 # 3. Verify connectivity
 python3 agent.py --check
@@ -48,14 +48,14 @@ history.
 
 | PROVIDER     | Needs a key          | Default model                 | Notes                     |
 |--------------|----------------------|-------------------------------|---------------------------|
-| `ollama`     | no                   | `qwen2.5-coder:7b`            | Local, private, offline   |
+| `ollama`     | no                   | `qwen2.5-coder:1.5b`          | Local, private, offline   |
 | `groq`       | `GROQ_API_KEY`       | `llama-3.3-70b-versatile`     | Fast, generous free tier  |
 | `openrouter` | `OPENROUTER_API_KEY` | `anthropic/claude-3.5-sonnet` | Many models, one key      |
 
 Set `MODEL=` in `.env` to override the default for whichever provider is active.
 
 Note: a 7B model needs roughly 5–6 GB of RAM. On a machine with less, use
-`MODEL=llama3.2:3b` or `qwen2.5-coder:1.5b`.
+`MODEL=qwen2.5-coder:1.5b` (the default here) or `llama3.2:3b`.
 
 ## Teaching it (this is the "training")
 
