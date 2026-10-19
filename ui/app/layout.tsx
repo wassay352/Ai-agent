@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Cloak Agent",
   description: "AI Agent Chat Interface",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
