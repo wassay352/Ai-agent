@@ -359,6 +359,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         session_id = request.get("session_id")
+        stream = request.get("stream", False)
 
         # Build the full message list: session history + new messages
         full_messages = list(messages)
@@ -372,6 +373,12 @@ class Handler(BaseHTTPRequestHandler):
             for msg in messages:
                 self.session_manager.add_message(session_id, msg)
 
+        # SSE streaming response
+        if stream:
+            self._send_sse_chat_completion(full_messages, session_id)
+            return
+
+        # Non-streaming JSON response
         try:
             message = self.client.complete(full_messages)
         except ProviderError as exc:
@@ -412,6 +419,65 @@ class Handler(BaseHTTPRequestHandler):
                 ],
             },
         )
+
+    def _send_sse_chat_completion(self, full_messages: list, session_id: str | None) -> None:
+        """Send SSE streaming response."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.end_headers()
+
+        try:
+            # Stream tokens from the provider
+            for token in self.client.stream(full_messages):
+                chunk = {
+                    "id": f"chatcmpl-{int(time.time() * 1000)}",
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": self.client.config.default_model,
+                    "choices": [{
+                        "index": 0,
+                        "delta": {"content": token},
+                        "finish_reason": None,
+                    }],
+                }
+                self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode("utf-8"))
+                self.wfile.flush()
+
+            # Final chunk
+            final_chunk = {
+                "id": f"chatcmpl-{int(time.time() * 1000)}",
+                "object": "chat.completion.chunk",
+                "created": int(time.time()),
+                "model": self.client.config.default_model,
+                "choices": [{
+                    "index": 0,
+                    "delta": {},
+                    "finish_reason": "stop",
+                }],
+            }
+            self.wfile.write(f"data: {json.dumps(final_chunk)}\n\n".encode("utf-8"))
+            self.wfile.write(b"data: [DONE]\n\n")
+            self.wfile.flush()
+
+            # Save to session (non-streaming call to get full message)
+            try:
+                message = self.client.complete(full_messages)
+                if session_id:
+                    self.session_manager.add_message(session_id, message)
+            except Exception:
+                pass
+
+        except ProviderError as exc:
+            error_chunk = {"error": {"message": str(exc)}}
+            self.wfile.write(f"data: {json.dumps(error_chunk)}\n\n".encode("utf-8"))
+            self.wfile.flush()
+        except Exception as exc:
+            logger.error("sse_error", extra={"error": str(exc)})
+            error_chunk = {"error": {"message": str(exc)}}
+            self.wfile.write(f"data: {json.dumps(error_chunk)}\n\n".encode("utf-8"))
+            self.wfile.flush()
 
     def _handle_create_session(self) -> None:
         if not self._authorized():
@@ -514,11 +580,11 @@ def main() -> int:
 
     api_key = os.getenv("CUSTOM_API_KEY", "").strip()
     if not api_key:
-        logger.error(
-            "Refusing to start: CUSTOM_API_KEY is not set in .env. "
-            "Generate one with: python3 -c \"import secrets;print(secrets.token_urlsafe(32))\""
+        api_key = "dev-local-key"
+        logger.warning(
+            "CUSTOM_API_KEY not set — using dev mode with default key 'dev-local-key'. "
+            "Set CUSTOM_API_KEY in .env for production."
         )
-        return 1
 
     try:
         config = resolve_provider(args.provider, args.model)

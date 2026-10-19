@@ -3,6 +3,7 @@
 import type { Message } from "@/components/ChatMessage";
 
 const API_URL = "http://localhost:8000/v1/chat/completions";
+const API_KEY = "dev-local-key";
 
 export interface StreamCallbacks {
   onToken: (token: string) => void;
@@ -26,7 +27,7 @@ export async function streamChat(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : { "X-API-Key": API_KEY }),
       },
       body: JSON.stringify({
         model,
